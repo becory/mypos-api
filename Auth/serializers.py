@@ -8,15 +8,14 @@ from rest_framework_simplejwt.state import User
 from rest_framework_simplejwt.settings import api_settings
 from django.contrib.auth.models import User as django_user
 
-from pos import settings
-
 
 class POSTokenVerifySerializer(TokenVerifySerializer):
     token = serializers.CharField()
 
     def validate(self, attrs):
         UntypedToken(attrs['token'])
-        data = jwt_decode(attrs['token'], os.environ.get('DJANGO_SETTINGS_MODULE').SECRET_KEY, algorithms=['HS256'])
+        data = jwt_decode(attrs['token'], globals()[os.environ.get('DJANGO_SETTINGS_MODULE')].SECRET_KEY,
+                          algorithms=['HS256'])
         user_id = data[api_settings.USER_ID_CLAIM]
         if data['token_type']:
             user = User.objects.get(**{api_settings.USER_ID_FIELD: user_id})
