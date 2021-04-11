@@ -1,4 +1,5 @@
-from rest_framework.decorators import action
+from rest_framework import permissions
+from rest_framework.decorators import action, permission_classes
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from .models import Menu, Week, Status, MenuItem
 from .serializers import MenuSerializer, WeekSerializer, StatusSerializer, StatusCreateSerializer, MenuItemSerializer, \
@@ -28,6 +29,7 @@ class MenuViewSet(BasicViewSet):
     ordering_fields = ['name', 'customerAction', 'visible']
     search_fields = ['name', 'customerAction', 'visible']
     modelName = Menu.__name__
+
 
     @swagger_auto_schema(operation_summary='Get Menu List',
                          operation_description='Get Menu List',
@@ -72,7 +74,7 @@ class MenuViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()
@@ -134,7 +136,7 @@ class WeekViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()
@@ -207,8 +209,10 @@ class MenuItemViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'image':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'menu', 'price', 'material', 'menuSet', 'description', 'status']
-    search_fields = ['name', 'menu', 'price', 'material', 'menuSet', 'description', 'status']
+    ordering_fields =['name', 'menu__name', 'price', 'recipes__material__name', 'menuSet__name', 'description',
+                     'status__name']
+    search_fields = ['name', 'menu__name', 'price', 'recipes__material__name', 'menuSet__name', 'description',
+                     'status__name']
     modelName = MenuItem.__name__
 
     @swagger_auto_schema(operation_summary='Get MenuItem List',

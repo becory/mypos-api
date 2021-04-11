@@ -25,11 +25,11 @@ with open('secret_key.txt') as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', 'mypos-demo.herokuapp.com']
 
 INTERNAL_IPS = [
     '127.0.0.1',
-    '192.168.50.49'
+    '192.168.50.50'
 ]
 
 # Application definition
@@ -49,11 +49,15 @@ INSTALLED_APPS = [
     'Customer',
     'Menu',
     'Order',
-    'Stock'
+    'Stock',
+    'Setting',
+    'Analysis',
+    'Auth'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -126,16 +130,18 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'zh-tw'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Taipei'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_URL = '/static/'
 
@@ -144,6 +150,9 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'patches.api.BrowsableAPIRendererFilterForm',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -155,10 +164,25 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://localhost:9527",
-    "http://192.168.50.49:9527",
-    "http://192.168.50.49"
+    "http://192.168.50.50:9527",
+    "http://192.168.50.50",
+    "mypos-demo.herokuapp.com/"
 ]
 
 CORS_ALLOW_HEADERS = ('content-disposition',
-                      'content-type'
+                      'content-type',
+                      'Authorization'
                       )
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        # 'Basic': {
+        #       'type': 'basic'
+        # },
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}

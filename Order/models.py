@@ -25,6 +25,7 @@ class Order(models.Model):
     pickupDateTime = models.DateTimeField(verbose_name='訂單完成時間', null=True, blank=True)
     orderFromChoices = (('C', 'Customer'), ('S', 'Store'), ('F', 'FoodPanda'), ('U', 'UberEats'),)
     orderFrom = models.CharField(verbose_name='訂單來源', choices=orderFromChoices, max_length=2)
+    checkOutTotal = models.DecimalField(decimal_places=2, max_digits=8, verbose_name='已收金額', null=True, blank=True)
 
 
 class Cook(models.Model):
@@ -36,7 +37,7 @@ class OrderDetail(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='orderDetails')
     menuItem = models.ForeignKey(MenuItem, on_delete=models.CASCADE, related_name='menuItems')
     transactionItem = models.CharField(verbose_name='實際交易儲存餐點名稱', max_length=30)
-    transactionCost = models.CharField(verbose_name='實際交易金額', max_length=50)
+    transactionCost = models.DecimalField(decimal_places=2, max_digits=8, verbose_name='實際交易金額')
     count = models.IntegerField(verbose_name='數量')
     cook = models.ForeignKey(Cook, on_delete=models.CASCADE, null=True, blank=True)
     remark = models.CharField(verbose_name='備註', max_length=100, null=True, blank=True)

@@ -1,7 +1,10 @@
 from django.utils.decorators import method_decorator
+from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from pos.const import fieldDict, inputFieldDict, dateFormat
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import status, authentication, permissions
 from rest_framework import viewsets
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
@@ -17,6 +20,15 @@ from rest_framework.decorators import action
 # Create your views here.
 dateFormatList = ['year', 'month', 'day']
 timeFormatList = ['hour', 'minute', 'second']
+
+
+class IsAdminSuperUser(BasePermission):
+    """
+    Allows access only to admin users.
+    """
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_staff and request.user.is_superuser)
 
 
 class DjangoFilterDescriptionInspector(CoreAPICompatInspector):
@@ -44,6 +56,8 @@ class BasicViewSet(viewsets.ViewSet):
     search_fields = []
     modelName = None
     pagination_class = StandardPagination()
+    authentication_classes = [JWTAuthentication, ]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -142,8 +156,8 @@ class BasicViewSet(viewsets.ViewSet):
     # @swagger_auto_schema(
     # )
     def retrieve(self, request, pk):
-        customer = get_object_or_404(self.get_queryset(), id=pk)
-        serializer = self.get_serializer_class()(customer)
+        result = get_object_or_404(self.get_queryset(), id=pk)
+        serializer = self.get_serializer_class()(result)
         data = serializer.data
         return Response(data)
 
@@ -168,5 +182,68 @@ class BasicViewSet(viewsets.ViewSet):
         serializer = self.get_serializer_class()(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        data = serializer.data
+        return Response(data)
+
+
+class AnalysisViewSet(viewsets.ViewSet):
+    serializer_class = None
+    model = None
+    queryset = None
+    list_filter_parameter = []
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = []
+    filterset_fields = []
+    search_fields = []
+    modelName = None
+    pagination_class = StandardPagination()
+    authentication_classes = [JWTAuthentication, ]
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            if hasattr(self, 'list_serializer_class'):
+                return self.list_serializer_class
+        elif self.action == 'retrieve':
+            if hasattr(self, 'retrieve_serializer_class'):
+                return self.retrieve_serializer_class
+        return self.serializer_class
+
+    def get_queryset(self):
+        return self.model.objects.all().order_by('pk')
+
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, view=self)
+        return queryset
+
+    @method_decorator(name='list', decorator=swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                name='columns',
+                in_=openapi.IN_QUERY,
+                description='columns',
+                type=openapi.TYPE_BOOLEAN
+            )
+        ],
+        filter_inspectors=[DjangoFilterDescriptionInspector]
+    ))
+    def list(self, request):
+        print(self.request.user)
+        aggregation = self.request.query_params.get('aggregation', False)
+        column = self.request.query_params.get('column', False)
+        if aggregation:
+            result = self.filter_queryset(self.get_queryset())
+            totalcount = result.count()
+            result = self.pagination_class.paginate_queryset(queryset=result, request=request, view=self)
+            serializer = self.get_serializer_class()(result, many=True)
+            data = serializer.data
+            return Response({"totalCount": totalcount, "result": data})
+
+    # @swagger_auto_schema(
+    # )
+    def retrieve(self, request, pk):
+        result = get_object_or_404(self.get_queryset(), id=pk)
+        serializer = self.get_serializer_class()(result)
         data = serializer.data
         return Response(data)

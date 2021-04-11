@@ -21,6 +21,6 @@ class Material(models.Model):
 
 class Stock(models.Model):
     stockDate = models.DateField(verbose_name="進貨時間", auto_now=True)
-    expiryDate = models.DateField(verbose_name="有效期限")
+    expiryDate = models.DateField(verbose_name="有效期限", null=True, blank=True)
     material = models.ForeignKey(Material, verbose_name='原料', on_delete=models.CASCADE)
     stock = models.DecimalField(decimal_places=2, max_digits=8, verbose_name='庫存')

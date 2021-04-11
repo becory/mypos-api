@@ -1,8 +1,13 @@
-from rest_framework.decorators import action
+import datetime
 
+from django.db import transaction
+from rest_framework import permissions
+from rest_framework.decorators import action, authentication_classes
+
+from Stock.models import Stock
 from .models import Status, Order, Cook, OrderDetail
 from .serializers import OrderStatusSerializer, OrderSerializer, OrderCreateSerializer, CookSerializer, \
-    OrderDetailSerializer, OrderRetrieveSerializer, OrderDashboardSerializer
+    OrderDetailSerializer, OrderRetrieveSerializer, OrderDashboardSerializer, OrderEditSerializer
 from patches.viewset import BasicViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
@@ -21,9 +26,10 @@ class StatusViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'customerAction', 'visible']
-    search_fields = ['name', 'customerAction', 'visible']
+    ordering_fields = ['id', 'name', 'className', 'orderNo', 'visible']
+    search_fields = ['id', 'name', 'className', 'orderNo', 'visible']
     modelName = Status.__name__
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
     @swagger_auto_schema(operation_summary='Get Status List',
                          operation_description='Get Status List',
@@ -68,7 +74,7 @@ class StatusViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()
@@ -87,9 +93,13 @@ class OrderViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'customerAction', 'visible']
-    search_fields = ['name', 'customerAction', 'visible']
+    ordering_fields = ['id', 'customer__name', 'status__name', 'checkOutTotal', 'orderID', 'desk', 'orderFrom',
+                       'orderDetails__menuItem__name']
+    search_fields = ['id', 'customer__name', 'status__name', 'checkOutTotal', 'orderID', 'desk', 'orderFrom',
+                     'orderDetails__menuItem__name']
     modelName = Order.__name__
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
 
     @swagger_auto_schema(operation_summary='Get Order List',
                          operation_description='Get Order List',
@@ -134,20 +144,44 @@ class OrderViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
-        serializer = self.serializer_class(instance)
-        data = serializer.data
-        self.get_queryset()
+        with transaction.atomic():
+            instance = get_object_or_404(self.get_queryset(), id=pk)
+
+            # 庫存清除
+            for item in instance.orderDetails.all():
+                for subItem in item.menuItem.recipes.all():
+                    print(subItem.material, -subItem.count * item.count, instance.createDateTime)
+                    Stock.objects.filter(material=subItem.material, stock=-subItem.count * item.count,
+                                         stockDate=instance.createDateTime).last().delete()
+                for menuItem in item.menuItem.menuSet.all():
+                    for subItem in menuItem.recipes.all():
+                        Stock.objects.filter(material=subItem.material,
+                                             stock=-subItem.count * item.count,
+                                             stockDate=instance.createDateTime).last().delete()
+            instance.orderDetails.all().delete()
+            instance.delete()
+            serializer = self.serializer_class(instance)
+            data = serializer.data
+            self.get_queryset()
         return Response(data)
 
     @action(detail=False, methods=['get'])
     def Dashboard(self, request):
-        result = super().filter_queryset(self.get_queryset())
+        result = super().filter_queryset(self.get_queryset().filter(createDateTime__gte=datetime.date.today()))
+        if self.request.query_params.get('status', None) == "3":
+            result = result.order_by('-orderID')[0:3]
         totalcount = result.count()
         result = super().pagination_class.paginate_queryset(queryset=result, request=request, view=self)
         serializer = OrderDashboardSerializer(result, many=True)
         data = serializer.data
         return Response({"totalCount": totalcount, "result": data})
+
+    @action(detail=True, methods=['get'])
+    def Edit(self, request, pk):
+        result = get_object_or_404(self.get_queryset(), id=pk)
+        serializer = OrderEditSerializer(result)
+        data = serializer.data
+        return Response(data)
 
 
 class CookViewSet(BasicViewSet):
@@ -158,9 +192,10 @@ class CookViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'customerAction', 'visible']
-    search_fields = ['name', 'customerAction', 'visible']
+    ordering_fields = ['label', 'className']
+    search_fields = ['label', 'className']
     modelName = Cook.__name__
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
     @swagger_auto_schema(operation_summary='Get Cook List',
                          operation_description='Get Cook List',
@@ -205,7 +240,7 @@ class CookViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()
@@ -267,7 +302,7 @@ class OrderDetailViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()

@@ -69,7 +69,7 @@ class CustomerViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()

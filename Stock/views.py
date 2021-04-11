@@ -22,8 +22,8 @@ class LabelViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'phone', 'gender']
-    search_fields = ['name', 'phone']
+    ordering_fields = ['name']
+    search_fields = ['name']
     modelName = Label.__name__
 
     @swagger_auto_schema(operation_summary='Get Label List',
@@ -69,7 +69,7 @@ class LabelViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()
@@ -84,8 +84,8 @@ class UnitViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'phone', 'gender']
-    search_fields = ['name', 'phone']
+    ordering_fields = ['name', 'sign']
+    search_fields = ['name', 'sign']
     modelName = Unit.__name__
 
     @swagger_auto_schema(operation_summary='Get Unit List',
@@ -131,7 +131,7 @@ class UnitViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()
@@ -147,8 +147,8 @@ class MaterialViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'label', 'brand']
-    search_fields = ['name', 'brand']
+    ordering_fields = ['name', 'label__name', 'brand', 'unit__name']
+    search_fields = ['name', 'label__name', 'brand', 'unit__name']
     modelName = Material.__name__
 
     @swagger_auto_schema(operation_summary='Get Material List',
@@ -199,8 +199,8 @@ class StockViewSet(BasicViewSet):
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
             filterset_fields.append(item)
-    ordering_fields = ['name', 'phone', 'gender']
-    search_fields = ['name', 'phone']
+    ordering_fields = ['stockDate', 'expiryDate', 'material__name', 'stock']
+    search_fields = ['stockDate', 'expiryDate', 'material__name', 'stock']
     modelName = Stock.__name__
 
     @swagger_auto_schema(operation_summary='Get Stock List',
@@ -246,7 +246,7 @@ class StockViewSet(BasicViewSet):
         responses={404: 'not found'}
     )
     def destroy(self, request, pk=None):
-        instance = get_object_or_404(self.get_queryset(), RS_ID=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance)
         data = serializer.data
         self.get_queryset()

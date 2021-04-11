@@ -108,7 +108,7 @@ class MenuSetSerializer(serializers.Serializer):
 
 
 class MenuItemDashboardSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField()
     name = serializers.CharField(max_length=30)
     price = serializers.DecimalField(decimal_places=2, max_digits=8)
     menuSet = MenuSetSerializer(many=True)
