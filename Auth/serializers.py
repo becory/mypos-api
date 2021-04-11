@@ -1,3 +1,5 @@
+import os
+
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenVerifySerializer
 from jwt import decode as jwt_decode
@@ -14,7 +16,7 @@ class POSTokenVerifySerializer(TokenVerifySerializer):
 
     def validate(self, attrs):
         UntypedToken(attrs['token'])
-        data = jwt_decode(attrs['token'], settings.SECRET_KEY, algorithms=['HS256'])
+        data = jwt_decode(attrs['token'], os.environ.get('DJANGO_SETTINGS_MODULE').SECRET_KEY, algorithms=['HS256'])
         user_id = data[api_settings.USER_ID_CLAIM]
         if data['token_type']:
             user = User.objects.get(**{api_settings.USER_ID_FIELD: user_id})
