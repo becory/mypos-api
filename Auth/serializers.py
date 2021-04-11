@@ -13,8 +13,9 @@ class POSTokenVerifySerializer(TokenVerifySerializer):
     token = serializers.CharField()
 
     def validate(self, attrs):
+        app = os.environ.get('DJANGO_SETTINGS_MODULE').split('.')
         UntypedToken(attrs['token'])
-        data = jwt_decode(attrs['token'], globals()[os.environ.get('DJANGO_SETTINGS_MODULE')].SECRET_KEY,
+        data = jwt_decode(attrs['token'], globals()[app[0]][app[1]].SECRET_KEY,
                           algorithms=['HS256'])
         user_id = data[api_settings.USER_ID_CLAIM]
         if data['token_type']:
