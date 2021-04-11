@@ -160,7 +160,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:9527",
     "http://192.168.50.50:9527",
     "http://192.168.50.50",
-    "mypos-demo.herokuapp.com/"
+    "https://mypos-demo.herokuapp.com"
 ]
 
 CORS_ALLOW_HEADERS = ('content-disposition',
