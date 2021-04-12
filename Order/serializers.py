@@ -89,9 +89,9 @@ class TimelineSerializer(serializers.Serializer):
 
 class OrderCreateSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(queryset=Status.objects.all(), default=1,
+    status = serializers.PrimaryKeyRelatedField(queryset=Status.objects.all(), default=Status.objects.get(id=1),
                                                 required=False)
-    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), default=1,
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), default=Customer.objects.get(id=1),
                                                   required=False)
     checkOut = serializers.BooleanField(default=False)
     orderID = serializers.IntegerField(required=False)
