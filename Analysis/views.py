@@ -123,7 +123,9 @@ class AnalysisViewSet(viewsets.ViewSet):
             if 'start_date' in queryFilter and 'end_date' in queryFilter:
                 if app == 'Order':
                     filterQuery = {"createDateTime__range": [queryFilter['start_date'][0], queryFilter['end_date'][0]]}
-                else:
+                elif app == 'OrderDetail':
+                    filterQuery = {"order__createDateTime__range": [queryFilter['start_date'][0], queryFilter['end_date'][0]]}
+                elif app == 'Stock':
                     filterQuery = {"stockDate__range": [queryFilter['start_date'][0], queryFilter['end_date'][0]]}
                 result = globals()[app].objects.filter(**filterQuery)
             else:
