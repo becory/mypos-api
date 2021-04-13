@@ -148,8 +148,10 @@ class OrderCreateSerializer(serializers.Serializer):
                 instance.orderDetails.set(order_list)
                 if 'checkOut' in validated_data and validated_data['checkOut']:
                     instance.checkOutTotal = total
+                    instance.checkoutDateTime = timezone.now()
                 else:
                     instance.checkOutTotal = None
+                    instance.checkoutDateTime = None
                 instance.save()
         return instance
 
@@ -211,9 +213,9 @@ class OrderCreateSerializer(serializers.Serializer):
                     # pickupDateTime = serializers.DateTimeField(allow_null=True, required=False, read_only=True)
             if 'checkOut' in validated_data:
                 if validated_data['checkOut']:
-                    instance.checkOutDateTime = timezone.now()
+                    instance.checkoutDateTime = timezone.now()
                 else:
-                    instance.checkOutDateTime = None
+                    instance.checkoutDateTime = None
 
             if validated_data['status'].id == 2:
                 instance.confirmDateTime = timezone.now()

@@ -145,10 +145,10 @@ class MenuItemCreateSerializer(serializers.Serializer):
         if 'menuSet' in validated_data:
             menu_sets = validated_data.pop('menuSet')
         instance = MenuItem.objects.create(**validated_data)
-        if menu_sets:
+        if 'menuSet' in validated_data:
             instance.menuSet.set(menu_sets)
         instance.save()
-        if recipe_list:
+        if 'recipes' in validated_data:
             recipe_list = map(lambda item: Recipe(menuItem=instance, **dict(item)), recipe_list)
             Recipe.objects.bulk_create(recipe_list)
             instance.recipes.set(recipe_list)
