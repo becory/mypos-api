@@ -18,6 +18,8 @@ class LabelViewSet(BasicViewSet):
     queryset = model.objects.all()
     serializer_class = LabelSerializer
     create_serializer_class = LabelCreateSerializer
+    update_serializer_class = LabelCreateSerializer
+    partial_serializer_class = LabelCreateSerializer
     filterset_fields = []
     for item in serializer_class.get_fields(serializer_class):
         if item != 'passcode':
