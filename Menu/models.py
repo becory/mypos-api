@@ -1,5 +1,6 @@
 from django.db import models
 from Stock.models import Material
+from django.core.exceptions import ValidationError
 
 
 # Create your models here.
@@ -22,10 +23,19 @@ class Status(models.Model):
     week = models.ManyToManyField(Week, verbose_name='販售星期', blank=True)
 
 
+def validate_file_size(value):
+    filesize = value.size
+
+    if filesize > 2097152:
+        raise ValidationError("The maximum file size that can be uploaded is 10MB")
+    else:
+        return value
+
+
 class MenuItem(models.Model):
     name = models.CharField(verbose_name='餐點名稱', max_length=30)
     menu = models.ForeignKey(Menu, verbose_name='目錄分類', default=1, on_delete=models.SET_DEFAULT, related_name='menuID')
-    image = models.ImageField(upload_to='Menu/', null=True, blank=True)
+    image = models.ImageField(upload_to='Menu/', null=True, blank=True, validators=[validate_file_size])
     price = models.DecimalField(decimal_places=2, max_digits=8, verbose_name='價格')
     menuSet = models.ManyToManyField("self", verbose_name='套餐內容', blank=True, symmetrical=False)
     description = models.CharField(verbose_name='描述', max_length=50)
