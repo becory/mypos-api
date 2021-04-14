@@ -45,10 +45,10 @@ schema_view = get_schema_view(
     openapi.Info(
         title="POS API",
         default_version='v1',
-        # description="Test description",
+        description="pos demo project",
         #    terms_of_service="https://www.google.com/policies/terms/",
-        #    contact=openapi.Contact(email="contact@snippets.local"),
-        #    license=openapi.License(name="BSD License"),
+        contact=openapi.Contact(name="Huang Ssu Yuan", email="ssuyuanhuang@gmail.com"),
+        # license=openapi.License(name="BSD License"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,), )
