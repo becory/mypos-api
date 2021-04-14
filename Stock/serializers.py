@@ -25,7 +25,8 @@ class LabelCreateSerializer(serializers.Serializer):
         for item in validated_data:
             if item not in self.UPDATE_FORBIDDEN:
                 setattr(instance, item, validated_data[item])
-        return instance.save()
+        instance.save()
+        return instance
 
 
 class UnitSerializer(serializers.Serializer):
@@ -41,7 +42,8 @@ class UnitSerializer(serializers.Serializer):
         for item in validated_data:
             if item not in self.UPDATE_FORBIDDEN:
                 setattr(instance, item, validated_data[item])
-        return instance.save()
+        instance.save()
+        return instance
 
 
 class MaterialSerializer(serializers.Serializer):
@@ -67,7 +69,8 @@ class MaterialCreateSerializer(serializers.Serializer):
         for item in validated_data:
             if item not in self.UPDATE_FORBIDDEN:
                 setattr(instance, item, validated_data[item])
-        return instance.save()
+        instance.save()
+        return instance
 
 
 class StockSerializer(serializers.Serializer):
@@ -85,4 +88,5 @@ class StockSerializer(serializers.Serializer):
         for item in validated_data:
             if item not in self.UPDATE_FORBIDDEN:
                 setattr(instance, item, validated_data[item])
-        return instance.save()
+        instance.save()
+        return instance
